@@ -1,0 +1,2 @@
+# ElastiQS
+Elastic SQS consumer
