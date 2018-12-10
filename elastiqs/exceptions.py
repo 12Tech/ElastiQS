@@ -1,0 +1,2 @@
+class InvalidQueueError(Exception):
+    pass

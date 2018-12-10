@@ -3,8 +3,9 @@ import logging
 import threading
 from collections import deque
 
-
 import boto3
+
+from .exceptions import InvalidQueueError
 
 
 def compose_queue_object(QueueName, QueueOwnerAWSAccountId=None):
@@ -22,6 +23,7 @@ def compose_queue_object(QueueName, QueueOwnerAWSAccountId=None):
 
     except Exception as e:
         print(e)
+        raise InvalidQueueError(e)
 
     
 
