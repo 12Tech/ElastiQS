@@ -107,7 +107,7 @@ class ElastiQS(object):
         # Optimum rate 0.9 < rate < 0.97
         if self.throughtput_rate < 0.9:
             self.consume_slower()
-        if self.throughtput_rate > 0.97:
+        if self.throughtput_rate > 0.999:
             self.consume_faster()
         
 
