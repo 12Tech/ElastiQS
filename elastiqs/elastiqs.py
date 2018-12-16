@@ -1,5 +1,6 @@
 
 import logging
+import time
 import threading
 import sys
 from collections import deque
@@ -93,6 +94,23 @@ class ElastiQS(object):
         except:
             return 0
 
+    def update_rates(self):
+        self.productions.append(datetime.utcnow().timestamp())
+
+        # logmsg = "Throughtput rate: {}".format(self.throughtput_rate)
+        # logger.info(logmsg)
+
+        logmsg = "Rates: {}/{}/{}".format(self.production_rate, self.consumption_rate, self.throughtput_rate)
+        logger.info(logmsg)
+
+
+        # Optimum rate 0.9 < rate < 0.97
+        if self.throughtput_rate < 0.9:
+            self.consume_slower()
+        if self.throughtput_rate > 0.97:
+            self.consume_faster()
+        
+
     def start_consuming(self):
         for _ in range(self.max_threads):
             self.consume_faster()
@@ -120,9 +138,7 @@ class ElastiQS(object):
 
     def produce_one(self):
         if len(self.production_queue):
-            self.productions.append(datetime.utcnow().timestamp())
-            logmsg = "Throughtput rate: {}".format(self.throughtput_rate)
-            logger.info(logmsg)
+            self.update_rates()
             return self.production_queue.popleft()
 
         else:
@@ -133,24 +149,26 @@ def main():
 
     q = ElastiQS(QueueName='elasticQueue')
     q.start_consuming()
-    for _ in range(q.max_threads):
-        def run():
-            while True:
-                try:
 
-                    message = q.produce_one()
-                    message.delete()
+    while True:
+        def produce():
+            try:
 
-                except EmptyProductionQueueError:
-                    # Empty Queue
-                    pass
-                except KeyboardInterrupt:
-                    if not len(q.threads):
-                        logger.info("Nothing else to kill. Exiting.")
-                        sys.exit(0)
-                    else:
-                        q.consume_slower()
-        threading.Thread(target=run).start()
+                message = q.produce_one()
+                message.delete()
+
+            except EmptyProductionQueueError:
+                # Empty Queue
+                pass
+            except KeyboardInterrupt:
+                if not len(q.threads):
+                    logger.info("Nothing else to kill. Exiting.")
+                    sys.exit(0)
+                else:
+                    q.consume_slower()
+        threading.Thread(target=produce).start()
+        time.sleep(0.01)
+        
 
 if __name__ == "__main__":
     main()
