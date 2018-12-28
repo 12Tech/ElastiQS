@@ -71,10 +71,15 @@ class ElastiQS(object):
 
     @property
     def max_threads(self):
+        """Max number of threads which will be spawned"""
         return 3 * multiprocessing.cpu_count() + 1
 
     @property
     def production_rate(self):
+        """Productions per time unit
+        :return: Number of productions per time unit
+        """
+
         try:
             return len(self.productions) / (self.productions[-1] - self.productions[0])
         except:
@@ -82,6 +87,10 @@ class ElastiQS(object):
 
     @property
     def consumption_rate(self):
+        """Consumptions per time unit
+        :return: Number of consumptions per time unit
+        """
+        
         try:
             return len(self.consumptions) / (self.consumptions[-1] - self.consumptions[0])
         except:
@@ -95,6 +104,8 @@ class ElastiQS(object):
             return 0
 
     def update_rates(self):
+        """Update production/consumption rate"""
+
         self.productions.append(datetime.utcnow().timestamp())
 
         # logmsg = "Throughtput rate: {}".format(self.throughtput_rate)
@@ -116,6 +127,8 @@ class ElastiQS(object):
             self.consume_faster()
 
     def consume_faster(self):
+        """Spawn a new thread in order to increase the performance of the consumer
+        """
         if len(self.threads) < self.max_threads:
             logger.info("Spawning new thread")
             consuming_thread = MessageConsumer(
